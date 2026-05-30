@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, Save, X } from "lucide-react";
 import { emptyTool } from "@/lib/utils";
 
-export default function ToolFormModal({ open, initialTool, loading, onClose, onSubmit }) {
+export default function ToolFormModal({ open, initialTool, projects = [], loading, onClose, onSubmit }) {
   const [form, setForm] = useState(emptyTool);
   const [showPassword, setShowPassword] = useState(false);
   const isEdit = Boolean(initialTool?.id);
@@ -20,6 +20,16 @@ export default function ToolFormModal({ open, initialTool, loading, onClose, onS
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function toggleProject(projectId) {
+    setForm((current) => {
+      const projectIds = current.projectIds || [];
+      return {
+        ...current,
+        projectIds: projectIds.includes(projectId) ? projectIds.filter((id) => id !== projectId) : [...projectIds, projectId],
+      };
+    });
   }
 
   function submit(event) {
@@ -84,6 +94,25 @@ export default function ToolFormModal({ open, initialTool, loading, onClose, onS
               <span>Ghi chú</span>
               <textarea value={form.ghiChu} onChange={(event) => updateField("ghiChu", event.target.value)} />
             </label>
+            <div className="field span2">
+              <span>Dự án sử dụng công cụ này</span>
+              <div className="checkList">
+                {projects.length ? (
+                  projects.map((project) => (
+                    <label className="checkRow" key={project.id}>
+                      <input
+                        type="checkbox"
+                        checked={(form.projectIds || []).includes(project.id)}
+                        onChange={() => toggleProject(project.id)}
+                      />
+                      <span>{project.tenDuAn || "Chưa đặt tên"}</span>
+                    </label>
+                  ))
+                ) : (
+                  <p className="muted compactText">Chưa có dự án để gán.</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         <footer className="modalFooter">
