@@ -463,6 +463,24 @@ tr.active td {
   background: #effaf8;
 }
 
+.activeToolRow td {
+  background: #f0fdf4;
+}
+
+.expiredToolRow td {
+  background: #fff1f2;
+}
+
+tr.activeToolRow:hover td,
+tr.activeToolRow.active td {
+  background: #dcfce7;
+}
+
+tr.expiredToolRow:hover td,
+tr.expiredToolRow.active td {
+  background: #ffe4e6;
+}
+
 .clickableRow {
   cursor: pointer;
 }
@@ -485,6 +503,29 @@ tr.active td {
   flex-wrap: wrap;
   gap: 6px;
   max-width: 320px;
+}
+
+.expiryBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.expiryBadge.active {
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.expiryBadge.expired {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
 }
 
 .nameButton {

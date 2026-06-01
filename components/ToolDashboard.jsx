@@ -70,7 +70,8 @@ export default function ToolDashboard() {
       if (!keyword) return true;
 
       const projectNames = (tool.projectIds || []).map((id) => projectById.get(id)?.tenDuAn || "").join(" ");
-      return [tool.id, tool.tenCongCu, tool.taiKhoan, tool.url, tool.moTa, tool.ghiChu, projectNames]
+      const expiry = getExpiryStatus(tool.ngayHetHan);
+      return [tool.id, tool.tenCongCu, tool.taiKhoan, tool.url, tool.moTa, tool.ghiChu, tool.ngayHetHan, expiry.label, projectNames]
         .join(" ")
         .toLowerCase()
         .includes(keyword);
@@ -376,6 +377,7 @@ export default function ToolDashboard() {
                     <th>Tài khoản</th>
                     <th>Mật khẩu</th>
                     <th>URL</th>
+                    <th>Hạn</th>
                     <th>Mô tả</th>
                     <th>Action</th>
                   </tr>
@@ -383,14 +385,14 @@ export default function ToolDashboard() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="7" className="emptyCell">
+                      <td colSpan="8" className="emptyCell">
                         Đang tải dữ liệu...
                       </td>
                     </tr>
                   ) : null}
                   {!loading && filteredTools.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="emptyCell">
+                      <td colSpan="8" className="emptyCell">
                         Không có công cụ phù hợp.
                       </td>
                     </tr>
@@ -399,7 +401,9 @@ export default function ToolDashboard() {
                     filteredTools.map((tool) => (
                       <tr
                         key={tool.id}
-                        className={`clickableRow ${selectedTool?.id === tool.id ? "active" : ""}`}
+                        className={`clickableRow ${getExpiryStatus(tool.ngayHetHan).expired ? "expiredToolRow" : "activeToolRow"} ${
+                          selectedTool?.id === tool.id ? "active" : ""
+                        }`}
                         onClick={() => openToolDetail(tool)}
                       >
                         <td>
@@ -449,6 +453,9 @@ export default function ToolDashboard() {
                           ) : (
                             <span className="muted">Chưa có</span>
                           )}
+                        </td>
+                        <td>
+                          <ExpiryBadge ngayHetHan={tool.ngayHetHan} />
                         </td>
                         <td className="truncate">{tool.moTa || "Chưa có mô tả"}</td>
                         <td>
@@ -636,6 +643,60 @@ function ChipList({ items, emptyText }) {
   );
 }
 
+function ExpiryBadge({ ngayHetHan }) {
+  const status = getExpiryStatus(ngayHetHan);
+
+  return <span className={`expiryBadge ${status.expired ? "expired" : "active"}`}>{status.label}</span>;
+}
+
+function getExpiryStatus(ngayHetHan) {
+  if (!ngayHetHan) {
+    return {
+      expired: false,
+      label: "Vĩnh viễn",
+    };
+  }
+
+  const expiryDate = parseDateOnly(ngayHetHan);
+  if (!expiryDate) {
+    return {
+      expired: false,
+      label: ngayHetHan,
+    };
+  }
+
+  const today = new Date();
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const expired = expiryDate < todayDate;
+
+  return {
+    expired,
+    label: expired ? `Hết hạn ${formatDateOnly(ngayHetHan)}` : `Còn hạn ${formatDateOnly(ngayHetHan)}`,
+  };
+}
+
+function parseDateOnly(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return null;
+  }
+
+  return date;
+}
+
+function formatDateOnly(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return value || "";
+  return `${match[3]}/${match[2]}/${match[1]}`;
+}
+
 function ToolDetailModal({ open, tool, projectNames, showPasswords, onClose, onCopy, onOpenUrl, onEdit, onDelete }) {
   if (!open || !tool) return null;
 
@@ -664,6 +725,7 @@ function ToolDetailModal({ open, tool, projectNames, showPasswords, onClose, onC
           <DetailRow label="taiKhoan" value={tool.taiKhoan || "Chưa có"} copyValue={tool.taiKhoan} onCopy={onCopy} />
           <DetailRow label="matKhau" value={password} copyValue={tool.matKhau} onCopy={onCopy} />
           <DetailRow label="url" value={tool.url || "Chưa có"} copyValue={tool.url} onCopy={onCopy} />
+          <DetailRow label="ngayHetHan" value={getExpiryStatus(tool.ngayHetHan).label} />
           <DetailRow label="moTa" value={tool.moTa || "Chưa có mô tả"} />
           <DetailRow label="ghiChu" value={tool.ghiChu || "Chưa có ghi chú"} />
         </div>

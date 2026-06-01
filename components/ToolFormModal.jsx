@@ -87,6 +87,10 @@ export default function ToolFormModal({ open, initialTool, projects = [], loadin
               />
             </label>
             <label className="field span2">
+              <span>Ngày hết hạn</span>
+              <input type="date" value={form.ngayHetHan} onChange={(event) => updateField("ngayHetHan", event.target.value)} />
+            </label>
+            <label className="field span2">
               <span>Mô tả</span>
               <textarea value={form.moTa} onChange={(event) => updateField("moTa", event.target.value)} />
             </label>

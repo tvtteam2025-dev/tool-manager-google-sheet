@@ -4,7 +4,7 @@ const CONFIG = {
   SHEETS: {
     TOOLS: {
       NAME: "Main",
-      HEADERS: ["id", "tenCongCu", "taiKhoan", "matKhau", "url", "moTa", "ghiChu"],
+      HEADERS: ["id", "tenCongCu", "taiKhoan", "matKhau", "url", "moTa", "ghiChu", "ngayHetHan"],
     },
     PROJECTS: {
       NAME: "Projects",
@@ -359,7 +359,7 @@ function syncProjectTools(projectId, toolIds) {
   }
 
   const sheet = getSheet(CONFIG.SHEETS.PROJECT_TOOLS);
-  const rows = normalizeIds(toolIds).map((toolId) => [projectId, toolId]);
+  const rows = normalizeIds(toolIds).map((toolId) => [escapeSheetText(projectId), escapeSheetText(toolId)]);
   sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, CONFIG.SHEETS.PROJECT_TOOLS.HEADERS.length).setValues(rows);
 }
 
@@ -371,7 +371,7 @@ function syncToolProjects(toolId, projectIds) {
   }
 
   const sheet = getSheet(CONFIG.SHEETS.PROJECT_TOOLS);
-  const rows = normalizeIds(projectIds).map((projectId) => [projectId, toolId]);
+  const rows = normalizeIds(projectIds).map((projectId) => [escapeSheetText(projectId), escapeSheetText(toolId)]);
   sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, CONFIG.SHEETS.PROJECT_TOOLS.HEADERS.length).setValues(rows);
 }
 
@@ -441,6 +441,10 @@ function escapeSheetText(value) {
 }
 
 function unescapeSheetText(value) {
+  if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value.getTime())) {
+    return Utilities.formatDate(value, Session.getScriptTimeZone(), "yyyy-MM-dd");
+  }
+
   const text = value === null || value === undefined ? "" : String(value);
 
   if (text[0] === "'") {
@@ -459,6 +463,7 @@ function normalizeTool(data) {
     url: String(data.url || "").trim(),
     moTa: String(data.moTa || "").trim(),
     ghiChu: String(data.ghiChu || "").trim(),
+    ngayHetHan: String(data.ngayHetHan || "").trim(),
   };
 }
 
