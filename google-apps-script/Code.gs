@@ -406,7 +406,7 @@ function findRowIndexById(sheet, id) {
   const ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
 
   for (let index = 0; index < ids.length; index++) {
-    if (String(ids[index][0]).trim() === id) {
+    if (unescapeSheetText(ids[index][0]).trim() === id) {
       return index + 2;
     }
   }
@@ -420,7 +420,7 @@ function rowToObject(row, headers, formulas) {
   headers.forEach((header, index) => {
     const formula = formulas && formulas[index] ? String(formulas[index]) : "";
     const value = formula || row[index];
-    object[header] = value === null || value === undefined ? "" : String(value);
+    object[header] = unescapeSheetText(value);
   });
 
   return object;
@@ -433,8 +433,18 @@ function objectToRow(object, headers) {
 function escapeSheetText(value) {
   const text = String(value || "");
 
-  if (/^[=+\-@]/.test(text)) {
-    return "'" + text;
+  if (!text || text[0] === "'") {
+    return text;
+  }
+
+  return "'" + text;
+}
+
+function unescapeSheetText(value) {
+  const text = value === null || value === undefined ? "" : String(value);
+
+  if (text[0] === "'") {
+    return text.slice(1);
   }
 
   return text;
