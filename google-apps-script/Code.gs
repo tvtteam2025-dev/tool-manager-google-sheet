@@ -338,8 +338,13 @@ function listRows(sheetConfig) {
     return [];
   }
 
-  const rows = sheet.getRange(2, 1, lastRow - 1, sheetConfig.HEADERS.length).getValues();
-  return rows.filter((row) => row.some((cell) => cell !== "")).map((row) => rowToObject(row, sheetConfig.HEADERS));
+  const range = sheet.getRange(2, 1, lastRow - 1, sheetConfig.HEADERS.length);
+  const rows = range.getValues();
+  const formulas = range.getFormulas();
+
+  return rows
+    .filter((row, rowIndex) => row.some((cell) => cell !== "") || formulas[rowIndex].some((formula) => formula !== ""))
+    .map((row, rowIndex) => rowToObject(row, sheetConfig.HEADERS, formulas[rowIndex]));
 }
 
 function listProjectToolRelations() {
@@ -409,18 +414,30 @@ function findRowIndexById(sheet, id) {
   return -1;
 }
 
-function rowToObject(row, headers) {
+function rowToObject(row, headers, formulas) {
   const object = {};
 
   headers.forEach((header, index) => {
-    object[header] = row[index] === null || row[index] === undefined ? "" : String(row[index]);
+    const formula = formulas && formulas[index] ? String(formulas[index]) : "";
+    const value = formula || row[index];
+    object[header] = value === null || value === undefined ? "" : String(value);
   });
 
   return object;
 }
 
 function objectToRow(object, headers) {
-  return headers.map((header) => object[header] || "");
+  return headers.map((header) => escapeSheetText(object[header] || ""));
+}
+
+function escapeSheetText(value) {
+  const text = String(value || "");
+
+  if (/^[=+\-@]/.test(text)) {
+    return "'" + text;
+  }
+
+  return text;
 }
 
 function normalizeTool(data) {
